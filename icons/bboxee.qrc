@@ -1,0 +1,21 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>clear.svg</file>
+    <file>edit.svg</file>
+    <file>edit_active.svg</file>
+    <file>zoom_in.svg</file>
+    <file>zoom_out.svg</file>
+    <file>next.svg</file>
+    <file>previous.svg</file>
+    <file>skip_next.svg</file>
+    <file>skip_previous.svg</file>
+    <file>delete.svg</file>
+    <file>remove.svg</file>
+    <file>file.svg</file>
+    <file>folder.svg</file>
+    <file>flag.svg</file>
+    <file>flagged.svg</file>
+    <file>visibility.svg</file>
+    <file>visibility_off.svg</file>
+  </qresource>
+</RCC>
