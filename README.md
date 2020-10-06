@@ -11,6 +11,7 @@ Dependencies:
  2. Leptonica
  
  sudo apt install tesseract-ocr libtesseract-dev libleptonica-dev pkg-config tesseract-ocr-script-deva
+ 
  pip install tesserocr
  
  3.PyQt5 (5.10.1)
