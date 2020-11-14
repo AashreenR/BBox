@@ -658,11 +658,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             #                              'BBoxEE (*.bbx)'))
             folder_path=self.image_directory
             images_path = [folder_path + s for s in sorted(os.listdir(folder_path))]
+            print(images_path)
 
-            allboxes = segment_images(images_path, show_segmented_images=False)
+            allboxes = self.segment_images(images_path)
 
-            bbx_json = convert_to_bbx(allboxes)
-            file_name= folder_path+'.bbx'
+            bbx_json = self.convert_to_bbx(allboxes)
+            file_name= folder_path+'boxes.bbx'
 
             with open(file_name, 'w') as fp:
                 json.dump(bbx_json, fp)
@@ -674,11 +675,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
 
 
-            if file_name[0] != '':
-                file = open(file_name[0], 'r')
+            if file_name != '':
+                print(file_name)
+                file = open(file_name, 'r')
                 self.data = json.load(file)
                 file.close()
-                self.image_directory = os.path.split(file_name[0])[0]
+                self.image_directory = os.path.split(file_name)[0]
                 self.load_config(self.image_directory)
 
                 self.populate_labels()
@@ -973,7 +975,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.update_annotation(ann)
 
     #modified code starts
-    def segment_images(img_paths, show_segmented_images=True, save_segmented_images=False, save_lines_as_images=False, save_coords = False):
+    def segment_images(self,img_paths, show_segmented_images=True, save_segmented_images=False, save_lines_as_images=False, save_coords = False):
         allboxes = defaultdict(list)
         if save_segmented_images is True:
             pathlib.Path("Results/Pages").mkdir(parents=True, exist_ok=True)
@@ -982,12 +984,18 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             pathlib.Path("Results/Coords").mkdir(parents=True, exist_ok=True)
 
         with PyTessBaseAPI(lang = 'Devanagari') as api:
-            for page_no, path in enumerate(img_paths):
+            for page_no, path2 in enumerate(img_paths):
+                if path2.endswith('.DS_Store'):
+                        continue
+                if path2.endswith('.bbx'):
+                        continue
+                if os.path.isdir(path2):
+                        continue
 
                 if save_lines_as_images is True:
                     pathlib.Path("Results/Lines/Page" + str(page_no +1)).mkdir(parents=True, exist_ok=True)
 
-                image = Image.open(path)
+                image = Image.open(path2)
                 img = np.array(image)
                 image = image.convert('L')
                 api.SetImage(image)
@@ -1022,7 +1030,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     cv2.rectangle(img, (left, top), (right, bottom), (0, 255, 0), 2)
                     cv2.putText(img, str(i), (left, top-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
 
-                    img_name = path.split("/")[-1]
+                    img_name = path2.split("/")[-1]
                     xmin = left/img.shape[1]
                     xmax = right/img.shape[1]
                     ymin = top/img.shape[0]
@@ -1050,7 +1058,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     dim = (width, height)
                     # resize image
                     resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
-                    cv2_imshow(resized)
+                    #cv2_imshow(resized)
 
                 if save_segmented_images is True:
                     filename = "Results/Pages/" + str(page_no +1) + ".jpg"
@@ -1063,7 +1071,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         return allboxes
 
-    def merge_boxes(boxlist):
+    def merge_boxes(self,boxlist):
         boxlist_np = np.asarray(boxlist)
         boxlist_np = boxlist_np[boxlist_np[:,1].argsort()] # sort by y
         x,y,w,h = boxlist_np.T
@@ -1083,7 +1091,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         return boxlist
 
-    def convert_to_bbx(allboxes):
+    def convert_to_bbx(self,allboxes):
 
         final_json = {}
 
