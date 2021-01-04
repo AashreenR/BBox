@@ -20,8 +20,9 @@ If tesserocr does not get installed you can try:
  
  
  OR for Mac OS:
-     brew install tesseract
-     pip install tesserocr
+ 
+      brew install tesseract
+      pip install tesserocr
  
 
  
