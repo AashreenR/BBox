@@ -45,7 +45,8 @@ class AnnotationAssistant(QtWidgets.QDialog, LABEL):
         self.setupUi(self)
         self.setWindowTitle('Annotation Assitant')
         self.setModal(True)
-        self.set_labels(['N/A'])
+        self.set_labels(['Text','Equation','Table','Image'])
+        #self.set_label('xyz')
         self.pb_submit.clicked.connect(self.submit)
 
     def set_label(self, label):

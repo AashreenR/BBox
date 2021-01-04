@@ -1,8 +1,9 @@
 {
     "labels": [
-        "Human",
-        "Bobcat",
-        "Moose"
+        "Text",
+        "Equation",
+        "Table",
+        "Image"
     ],
     "license": {
         "default": {

@@ -22,10 +22,6 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from __future__ import print_function, division
-from PyQt5.QtWidgets import * 
-from PyQt5 import QtCore 
-from PyQt5.QtGui import *
 import os
 import sys
 import glob
@@ -41,16 +37,7 @@ from bboxee.gui import AnnotationAssistant
 from bboxee.gui import AnnotatorDialog
 from bboxee.gui import AnalystDialog
 from collections import defaultdict
-import xmltodict
-import imutils
-import glob
-
-
-import click
-import matplotlib.pyplot as plt
-
-from ARU.pix_lab.util.inference_pb import Inference_pb
-from ARU.pix_lab.util.util import read_image_list
+from tesserocr import PyTessBaseAPI, RIL
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS
@@ -90,7 +77,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.graphicsView.moved.connect(self.update_bbox)
         self.graphicsView.select_bbox.connect(self.select_bbox)
         self.graphicsView.delete_event.connect(self.delete_selected_row)
-        self.graphicsView.setStyleSheet("background-color: grey;")
 
         self.pb_directory.clicked.connect(self.load_from_directory)
         self.pb_directory.setIconSize(QtCore.QSize(icon_size, icon_size))
@@ -99,14 +85,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_label_file.clicked.connect(self.load_from_file)
         self.pb_label_file.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_label_file.setIcon(QtGui.QIcon(':/icons/file.svg'))
-
-        #modified code
-
-        self.skew_file.clicked.connect(self.skew_correction)
-        self.skew_file.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.skew_file.setIcon(QtGui.QIcon(':/icons/folder.svg'))
-
-        #modified code ends
 
         self.pb_visible.clicked.connect(self.graphicsView.toggle_visibility)
 
@@ -1138,7 +1116,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     "ymin" : box[2],
                     "ymax" : box[3],
                 }
-                box_dict["label"] = "Text"
+                box_dict["label"] = "N/A"
                 box_dict["occluded"] = "N"
                 box_dict["truncated"] = "N"
                 box_dict["difficult"] = "N"
@@ -1162,160 +1140,5 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rec['license'] = license['license']
             rec['license_url'] = license['license_url']
 
-    def get_baselines(self,base_dir):
-        # Read and process contour page XML files. Returns a dict with image file as key.
-        #base_dir = "/home/shivam/Downloads/Papers/Layout_Detection/Data/temp"
-        xml_files = [f for f in os.listdir(base_dir) if f.endswith('.xml')]
-        all_baselines = {}
-        
-        for xml_file in xml_files:
-            xml_loc = os.path.join(base_dir, xml_file)
-            with open(xml_loc) as fd:
-                doc = xmltodict.parse(fd.read())
-            
-            page_baselines = []
-            
-            for textLine in doc['PcGts']['Page']['TextRegion']['TextLine']:
-                pts = textLine['Baseline']['@points']
-                page_baselines.append([list(map(int, coords.split(','))) for coords in pts.split()])
-            
-            new_dir=self.image_directory
-            print(new_dir+ xml_file[:-4])
-            if os.path.exists(new_dir+ xml_file[:-4]+'.jpeg'):
-                ext='.jpeg'
-            if os.path.exists(new_dir+ xml_file[:-4]+'.jpg'):
-                ext='.jpg'
-            if os.path.exists(new_dir+ xml_file[:-4]+'.png'):
-                ext='.png'
-
-            img_loc = os.path.join(new_dir, xml_file[:-4]+ext)
-            all_baselines[img_loc] = page_baselines
-            
-        return all_baselines
-
-
-    def estimate_coef(self,x, y): 
-        # number of observations/points 
-        n = np.size(x) 
-      
-        # mean of x and y vector 
-        m_x, m_y = np.mean(x), np.mean(y) 
-      
-        # calculating cross-deviation and deviation about x 
-        SS_xy = np.sum(y*x) - n*m_y*m_x 
-        SS_xx = np.sum(x*x) - n*m_x*m_x 
-      
-        # calculating regression coefficients 
-        b_1 = SS_xy / SS_xx 
-        b_0 = m_y - b_1*m_x 
-      
-        return(b_0, b_1) 
-
-
-    def imshow(img, text=None):
-        scale_percent = 30/100
-        dim = (int(img.shape[1] * scale_percent), int(img.shape[0] * scale_percent))
-        resized = cv2.resize(img, (dim), interpolation = cv2.INTER_AREA)  
-        
-        if text:
-            print(text)
-            cv2.imshow(text, resized) 
-        else:
-            cv2.imshow("Window", resized)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-      
-        
-    def find_outliers(self,data, m=2):
-        return abs(data - np.mean(data)) < m * np.std(data)
-
-
-
-
-
-    def skew_correction(self):
-        folder_path=self.image_directory
-        f=open("./ARU/demo_images/imgs.lst","w")
-        for file in os.listdir(folder_path):
-            if file.endswith(".jpg"):
-                f.write(str(file)+"\n")
-            if file.endswith(".jpeg"):
-                f.write(str(file)+"\n")
-            if file.endswith(".png"):
-                f.write(str(file)+"\n")
-        f.close()
-
-        files = glob.glob('skew_temp/*')
-        for f in files:
-            os.remove(f)
-
-        files = glob.glob('skew_corrected/*')
-        for f in files:
-            os.remove(f)
-
-
-
-
-
-
-        path_list_imgs="./ARU/demo_images/imgs.lst"
-        path_net_pb="./ARU/demo_nets/model100_ema.pb"
-        list_inf = read_image_list(path_list_imgs)
-        inference = Inference_pb(path_net_pb, list_inf, mode='L',folder_path=folder_path)#, scale=1)
-        results = inference.inference(print_result=False, save_result=True)
-        base_dir="skew_temp/"
-        all_baselines=self.get_baselines(base_dir)
-        max_rotation = 5
-        for img_loc,baselines in all_baselines.items():
-            print(img_loc)
-            image = cv2.imread(img_loc)
-            
-            angles = []
-            weights = []
-            for baseline in baselines:
-                baseline = np.array(baseline)
-                x = baseline[:,0]
-                y = baseline[:,1]
-                b_0, b_1 = self.estimate_coef(x, y)
-                
-                start_point = (x[0], round(b_0 + b_1*x[0]))
-                end_point = (x[-1], round(b_0 + b_1*x[-1]))
-                color = (0, 255, 0)  
-                thickness = 5
-                
-                angles.append(np.arctan(b_1))
-                weights.append(np.linalg.norm(baseline[-1,:] - baseline[0,:]))
-            
-            angles = np.rad2deg(angles)
-            outliers1 = self.find_outliers(angles, 2)
-            weights = np.array(weights)
-            # outliers2 = weights < np.percentile(weights, 10, interpolation = 'midpoint')
-            # outliers = np.logical_or(outliers1, outliers2)
-            outliers = outliers1
-            angles = angles[outliers]
-            weights = np.square(weights[outliers])
-            
-            angle_mean = np.average(angles, weights=weights)
-            angle_mean = angle_mean if -max_rotation <= angle_mean <= max_rotation else 0
-            print(img_loc, angle_mean)
-            rotated = imutils.rotate(image, angle_mean)
-
-            base_save_loc = "skew_corrected/"
-            file_name = os.path.split(img_loc)[1]
-            cv2.imwrite(os.path.join(base_save_loc, file_name), rotated)
-
-            if self.dirty_data_check():
-                directory = "skew_corrected/"
-                if directory != '':
-                    self.load_config(directory)
-                    self.image_directory = directory
-                    self.data = schema.annotation_file()
-                    self.populate_labels()
-                    self.mask = None
-                    self.load_image_list()
-                    self.pb_mask.setEnabled(True)
-                    self.pb_annotater.setEnabled(True)
-                    self.set_dirty(False)
-                    self.label_image_directory.setText(self.image_directory)
 
 
