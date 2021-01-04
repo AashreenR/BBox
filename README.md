@@ -1,13 +1,24 @@
 # BBox
+Step 1:
+ Clone the repo https://github.com/AashreenR/ARU and place all items inside ARU folder
+Step 2:
+ Navigate to the BBox directory in terminal/ command prompt and use 
+              
+              
+              python main.py
+              
 This GUI can be used for the following:
 
- Creating New Bounding Boxes
+
+ 1.Creating New Bounding Boxes using Tesserocr
  
- Loading Existing bounding boxes
+ 2.Loading Existing bounding boxes
  
- Modifying existing bounding boxes
+ 3.Modifying existing bounding boxes
  
- Saving Each Bounding Box as an individual image
+ 4.Saving Each Bounding Box as an individual image
+ 
+ 5. Skew Correcting Images
  
  
 Dependencies are specified the requirements.txt file.
