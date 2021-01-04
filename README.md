@@ -1,6 +1,6 @@
 # BBox
 Step 1:
- Clone the repo https://github.com/AashreenR/ARU and place all items inside ARU folder
+ Clone the repo https://github.com/AashreenR/ARU/tree/master and place all items inside ARU folder
 Step 2:
  Navigate to the BBox directory in terminal/ command prompt and use 
               
