@@ -1053,7 +1053,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     cv2.rectangle(img, (left, top), (right, bottom), (0, 255, 0), 2)
                     cv2.putText(img, str(i), (left, top-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
 
-                    img_name = path2.split("/")[-1]
+                    img_name = path2.split("\\")[-1]
                     xmin = left/img.shape[1]
                     xmax = right/img.shape[1]
                     ymin = top/img.shape[0]
