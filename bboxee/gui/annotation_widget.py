@@ -44,6 +44,7 @@ from collections import defaultdict
 import xmltodict
 import imutils
 import glob
+import shutil
 
 
 import click
@@ -1246,12 +1247,18 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         f.close()
 
         files = glob.glob('skew_temp/*')
-        for f in files:
-            os.remove(f)
+        for file_path in files:
+	        if os.path.isfile(file_path) or os.path.islink(file_path):
+	            os.unlink(file_path)
+	        elif os.path.isdir(file_path):
+	            shutil.rmtree(file_path)
 
         files = glob.glob('skew_corrected/*')
-        for f in files:
-            os.remove(f)
+        for file_path in files:
+	        if os.path.isfile(file_path) or os.path.islink(file_path):
+	            os.unlink(file_path)
+	        elif os.path.isdir(file_path):
+	            shutil.rmtree(file_path)
 
 
 
